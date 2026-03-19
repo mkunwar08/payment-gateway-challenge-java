@@ -13,7 +13,7 @@ public class PostPaymentRequest implements Serializable {
   private int expiryYear;
   private String currency;
   private int amount;
-  private int cvv;
+  private String cvv;
 
   public String getCardNumber() {
     return cardNumber;
@@ -55,11 +55,11 @@ public class PostPaymentRequest implements Serializable {
     this.amount = amount;
   }
 
-  public int getCvv() {
+  public String getCvv() {
     return cvv;
   }
 
-  public void setCvv(int cvv) {
+  public void setCvv(String cvv) {
     this.cvv = cvv;
   }
 

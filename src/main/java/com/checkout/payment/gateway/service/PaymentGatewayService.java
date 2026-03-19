@@ -33,8 +33,9 @@ public class PaymentGatewayService {
 
   public PostPaymentResponse processPayment(PostPaymentRequest paymentRequest) {
     PostBankRequest bankRequest = new PostBankRequest(paymentRequest);
+    System.out.println(bankRequest.toString());
     System.out.println(paymentRequest.toString());
-    BankResponse bankResponse = restTemplate.postForObject("http://localhost:8080/payments", paymentRequest, BankResponse.class);
+    BankResponse bankResponse = restTemplate.postForObject("http://localhost:8080/payments", bankRequest, BankResponse.class);
 
     PostPaymentResponse paymentResponse = new PostPaymentResponse();
     int cardLastFour = Integer.parseInt(
