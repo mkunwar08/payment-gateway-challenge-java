@@ -28,7 +28,7 @@ public class PaymentGatewayController {
 
   @PostMapping("/payments")
   public ResponseEntity<PostPaymentResponse> processPayment(@RequestBody PostPaymentRequest paymentRequest) {
-    PostPaymentResponse response = paymentGatewayService.processPayment();
-
+    PostPaymentResponse response = paymentGatewayService.processPayment(paymentRequest);
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 }
