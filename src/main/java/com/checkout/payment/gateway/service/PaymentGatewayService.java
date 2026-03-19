@@ -11,6 +11,9 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -35,8 +38,7 @@ public class PaymentGatewayService {
     PostBankRequest bankRequest = new PostBankRequest(paymentRequest);
     System.out.println(bankRequest.toString());
     System.out.println(paymentRequest.toString());
-    BankResponse bankResponse = restTemplate.postForObject("http://localhost:8080/payments", bankRequest, BankResponse.class);
-
+    BankResponse bankResponse = callBank(bankRequest);
     PostPaymentResponse paymentResponse = new PostPaymentResponse();
     int cardLastFour = Integer.parseInt(
         paymentRequest.getCardNumber().substring(paymentRequest.getCardNumber().length() -4));
@@ -50,5 +52,19 @@ public class PaymentGatewayService {
 
     paymentsRepository.add(paymentResponse);
     return paymentResponse;
+  }
+
+  public BankResponse callBank(PostBankRequest bankRequest) {
+    try {
+      return restTemplate.postForObject("http://localhost:8080/payments", bankRequest, BankResponse.class);
+    } catch(ResourceAccessException ex) {
+      throw new EventProcessingException("Bank is not currently available");
+    } catch(HttpClientErrorException ex) {
+      throw new EventProcessingException("Bank rejected the request");
+    } catch(HttpServerErrorException ex) {
+      throw new EventProcessingException("Bank returned a server error");
+    } catch(Exception ex) {
+      throw new EventProcessingException("Error forwarding request to bank");
+    }
   }
 }
