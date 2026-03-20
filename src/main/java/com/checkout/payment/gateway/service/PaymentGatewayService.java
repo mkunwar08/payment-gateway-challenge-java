@@ -31,7 +31,6 @@ public class PaymentGatewayService {
       @Value("${bank.url}") String bankURL) {
     this.paymentsRepository = paymentsRepository;
     this.restTemplate = restTemplate;
-    System.out.println(bankURL);
     this.bankURL = bankURL;
   }
 

@@ -22,11 +22,6 @@ public class PostPaymentRequestValidator {
     errors.addAll(validateCurrency(request.getCurrency()));
     errors.addAll(validateAmount(request.getAmount()));
 
-    System.out.println("printing errors");
-    for (int i = 0; i < errors.size(); i++) {
-      System.out.println(errors.get(i));
-    }
-
     return errors;
   }
 
@@ -63,8 +58,6 @@ public class PostPaymentRequestValidator {
   public List<String> validateExpiryYear(Integer expiryYear) {
     List<String> errors = new ArrayList<>();
 
-    System.out.println("expiry year");
-    System.out.println(expiryYear);
     if(expiryYear == null) {
       errors.add("Expiry Year must be supplied");
     }
