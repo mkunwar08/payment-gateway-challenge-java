@@ -61,6 +61,22 @@ class PaymentGatewayControllerTest {
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("Page not found"));
   }
+//
+//  @Test
+////  void whenPaymentIsDeclinedThenItIsStillReturned() throws Exception {
+////    Map<String, Object> request = validRequestBody();
+////    request.put("card_number", "1234567890987654"); //cardNo ending in even number returns Declined
+////
+////    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payments")
+////            .contentType(MediaType.APPLICATION_JSON)
+////            .content(objectMapper.writeValueAsString(request)))
+////            .andExpect(jsonPath("$.status").value("Declined"))
+////            .andExpect(jsonPath("$.cardNumberLastFour").value(request.get("card_number")
+////            .andExpect(jsonPath("$.expiryMonth").value(payment.getExpiryMonth()))
+////            .andExpect(jsonPath("$.expiryYear").value(payment.getExpiryYear()))
+////            .andExpect(jsonPath("$.currency").value(payment.getCurrency()))
+////            .andExpect(jsonPath("$.amount").value(payment.getAmount()));
+////  }
 
   @Test
   void whenNoRequestBodyThenBadRequestIsReturned() throws Exception {

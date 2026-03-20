@@ -60,7 +60,7 @@ public class PaymentGatewayService {
     paymentResponse.setAmount(paymentRequest.getAmount());
     paymentResponse.setStatus(bankResponse.isAuthorized() ? PaymentStatus.AUTHORIZED: PaymentStatus.DECLINED);
 
-    LOG.info("Payment processed id={} status={}");
+    LOG.info("Payment processed id={} status={}", paymentResponse.getId(), paymentResponse.getStatus());
     paymentsRepository.add(paymentResponse);
     return paymentResponse;
   }
