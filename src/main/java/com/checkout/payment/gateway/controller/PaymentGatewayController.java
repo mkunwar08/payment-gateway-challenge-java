@@ -42,7 +42,7 @@ public class PaymentGatewayController {
 
   @PostMapping("/payments")
   public ResponseEntity<?> processPayment(@RequestBody PostPaymentRequest paymentRequest) {
-    LOG.info("Payment request received currency = {} amount = {}");
+    LOG.info("Payment request received currency = {} amount = {}", paymentRequest.getCurrency(), paymentRequest.getAmount());
 
     List<String> errors = requestValidator.validateRequest(paymentRequest);
     if(!errors.isEmpty()) {
