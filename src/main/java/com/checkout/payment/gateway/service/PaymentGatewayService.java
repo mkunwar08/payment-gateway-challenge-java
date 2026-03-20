@@ -10,6 +10,7 @@ import com.checkout.payment.gateway.repository.PaymentsRepository;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -23,23 +24,30 @@ public class PaymentGatewayService {
 
   private final PaymentsRepository paymentsRepository;
   private final RestTemplate restTemplate;
+  private final String bankURL;
 
-  public PaymentGatewayService(PaymentsRepository paymentsRepository, RestTemplate restTemplate) {
+  public PaymentGatewayService(PaymentsRepository paymentsRepository, RestTemplate restTemplate,
+      @Value("{bank.url}") String bankURL) {
     this.paymentsRepository = paymentsRepository;
     this.restTemplate = restTemplate;
+    this.bankURL = bankURL;
   }
 
   public PostPaymentResponse getPaymentById(UUID id) {
     LOG.debug("Requesting access to to payment with ID {}", id);
-    return paymentsRepository.get(id).orElseThrow(() -> new EventProcessingException("Invalid ID"));
+    PostPaymentResponse payment = paymentsRepository.get(id).orElseThrow(() -> {
+      LOG.warn("Payment with id={} not found", id);
+      return new EventProcessingException("Invalid ID");
+    });
+    LOG.info("Payment with id={} and status={} retrieved", payment.getId(), payment.getStatus());
+    return payment;
   }
 
   public PostPaymentResponse processPayment(PostPaymentRequest paymentRequest) {
     PostBankRequest bankRequest = new PostBankRequest(paymentRequest);
-    System.out.println(bankRequest.toString());
-    System.out.println(paymentRequest.toString());
     BankResponse bankResponse = callBank(bankRequest);
     PostPaymentResponse paymentResponse = new PostPaymentResponse();
+
     int cardLastFour = Integer.parseInt(
         paymentRequest.getCardNumber().substring(paymentRequest.getCardNumber().length() -4));
     paymentResponse.setId(UUID.randomUUID());
@@ -50,20 +58,31 @@ public class PaymentGatewayService {
     paymentResponse.setAmount(paymentRequest.getAmount());
     paymentResponse.setStatus(bankResponse.isAuthorized() ? PaymentStatus.AUTHORIZED: PaymentStatus.DECLINED);
 
+    LOG.info("Payment processed id={} status={}");
     paymentsRepository.add(paymentResponse);
     return paymentResponse;
   }
 
   public BankResponse callBank(PostBankRequest bankRequest) {
+    LOG.info("Calling Bank at url={}", bankURL);
     try {
-      return restTemplate.postForObject("http://localhost:8080/payments", bankRequest, BankResponse.class);
-    } catch(ResourceAccessException ex) {
+      BankResponse response = restTemplate.postForObject(bankURL+ "/payments", bankRequest, BankResponse.class);
+      LOG.info("The payment has been authorized={}", response.isAuthorized());
+      return response;
+    } catch (ResourceAccessException ex) {
+      LOG.error("Bank is not available, message={}", ex.getMessage());
       throw new EventProcessingException("Bank is not currently available");
-    } catch(HttpClientErrorException ex) {
+
+    } catch (HttpClientErrorException ex) {
+      LOG.error("Bank returned a client error, status={}", ex.getStatusCode());
       throw new EventProcessingException("Bank rejected the request");
-    } catch(HttpServerErrorException ex) {
+
+    } catch (HttpServerErrorException ex) {
+      LOG.error("Bank returned a server error, status={}", ex.getStatusCode());
       throw new EventProcessingException("Bank returned a server error");
-    } catch(Exception ex) {
+
+    } catch (Exception ex) {
+      LOG.error("Unexpected error calling the bank, message = {}", ex.getMessage());
       throw new EventProcessingException("Error forwarding request to bank");
     }
   }
