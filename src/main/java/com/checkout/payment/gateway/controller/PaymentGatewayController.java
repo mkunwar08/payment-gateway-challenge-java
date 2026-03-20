@@ -6,6 +6,8 @@ import com.checkout.payment.gateway.model.PostPaymentResponse;
 import com.checkout.payment.gateway.service.PaymentGatewayService;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.checkout.payment.gateway.validation.PostPaymentRequestValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController("api")
 public class PaymentGatewayController {
 
+  private static final Logger LOG = LoggerFactory.getLogger(PaymentGatewayController.class);
+
   private final PaymentGatewayService paymentGatewayService;
   private final PostPaymentRequestValidator requestValidator;
 
@@ -29,17 +33,25 @@ public class PaymentGatewayController {
 
   @GetMapping("/payment/{id}")
   public ResponseEntity<PostPaymentResponse> getPostPaymentEventById(@PathVariable UUID id) {
-    return new ResponseEntity<>(paymentGatewayService.getPaymentById(id), HttpStatus.OK);
+    LOG.info("Retrieve payment request for id={}", id);
+    PostPaymentResponse response = paymentGatewayService.getPaymentById(id);
+
+    LOG.info("Retrieved payment request for id={} status={}", response.getId(), response.getStatus());
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @PostMapping("/payments")
   public ResponseEntity<?> processPayment(@RequestBody PostPaymentRequest paymentRequest) {
+    LOG.info("Payment request received currency = {} amount = {}");
 
     List<String> errors = requestValidator.validateRequest(paymentRequest);
     if(!errors.isEmpty()) {
+      LOG.warn("Payment request rejected due to errors={}", errors);
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Rejected", errors));
     }
+
     PostPaymentResponse response = paymentGatewayService.processPayment(paymentRequest);
+    LOG.info("Payment request completed id={} status={}", response.getId(), response.getStatus());
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 }
