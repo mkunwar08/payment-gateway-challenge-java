@@ -45,7 +45,7 @@ class PaymentGatewayControllerTest {
 
     paymentsRepository.add(payment);
 
-    mvc.perform(MockMvcRequestBuilders.get("/payment/" + payment.getId()))
+    mvc.perform(MockMvcRequestBuilders.get("/api/v1/payment/" + payment.getId()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(payment.getStatus().getName()))
         .andExpect(jsonPath("$.cardNumberLastFour").value(payment.getCardNumberLastFour()))
@@ -57,14 +57,14 @@ class PaymentGatewayControllerTest {
 
   @Test
   void whenPaymentWithIdDoesNotExistThen404IsReturned() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.get("/payment/" + UUID.randomUUID()))
+    mvc.perform(MockMvcRequestBuilders.get("/api/v1/payment/" + UUID.randomUUID()))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("Page not found"));
   }
 
   @Test
   void whenNoRequestBodyThenBadRequestIsReturned() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.post("/payments")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payments")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest());
   }
@@ -76,7 +76,7 @@ class PaymentGatewayControllerTest {
     request.put("expiry_month", 12);
     request.put("expiry_year", 2025);
 
-    mvc.perform(MockMvcRequestBuilders.post("/payments")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payments")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -88,7 +88,7 @@ class PaymentGatewayControllerTest {
     Map<String, Object> request = validRequestBody();
     request.put("cvv", "12");
 
-    mvc.perform(MockMvcRequestBuilders.post("/payments")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payments")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest())
@@ -100,7 +100,7 @@ class PaymentGatewayControllerTest {
     Map<String, Object> request = validRequestBody();
     request.put("amount", -50);
 
-    mvc.perform(MockMvcRequestBuilders.post("/payments")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payments")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isBadRequest())
