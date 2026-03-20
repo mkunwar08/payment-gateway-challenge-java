@@ -1,6 +1,7 @@
 package com.checkout.payment.gateway.service;
 
 import com.checkout.payment.gateway.enums.PaymentStatus;
+import com.checkout.payment.gateway.exception.BankException;
 import com.checkout.payment.gateway.exception.EventProcessingException;
 import com.checkout.payment.gateway.model.BankResponse;
 import com.checkout.payment.gateway.model.PostBankRequest;
@@ -27,9 +28,10 @@ public class PaymentGatewayService {
   private final String bankURL;
 
   public PaymentGatewayService(PaymentsRepository paymentsRepository, RestTemplate restTemplate,
-      @Value("{bank.url}") String bankURL) {
+      @Value("${bank.url}") String bankURL) {
     this.paymentsRepository = paymentsRepository;
     this.restTemplate = restTemplate;
+    System.out.println(bankURL);
     this.bankURL = bankURL;
   }
 
@@ -71,19 +73,19 @@ public class PaymentGatewayService {
       return response;
     } catch (ResourceAccessException ex) {
       LOG.error("Bank is not available, message={}", ex.getMessage());
-      throw new EventProcessingException("Bank is not currently available");
+      throw new BankException("Bank is not currently available");
 
     } catch (HttpClientErrorException ex) {
       LOG.error("Bank returned a client error, status={}", ex.getStatusCode());
-      throw new EventProcessingException("Bank rejected the request");
+      throw new BankException("Bank rejected the request");
 
     } catch (HttpServerErrorException ex) {
       LOG.error("Bank returned a server error, status={}", ex.getStatusCode());
-      throw new EventProcessingException("Bank returned a server error");
+      throw new BankException("Bank returned a server error");
 
     } catch (Exception ex) {
       LOG.error("Unexpected error calling the bank, message = {}", ex.getMessage());
-      throw new EventProcessingException("Error forwarding request to bank");
+      throw new BankException("Error forwarding request to bank");
     }
   }
 }
